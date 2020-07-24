@@ -1,0 +1,64 @@
+import * as types from "./actionType";
+import * as courseApi from "../../api/courseApi";
+import { beginApiCall } from "./apiStatusAction";
+
+export function createCourse(course) {
+  return { type: types.CREATE_COURSE, course };
+}
+
+export function loadCourseSuccess(courses) {
+  return { type: types.LOAD_COURSES_SUCCESS, courses };
+}
+
+export function deleteCourseOptimistic(course) {
+  return {
+    type: types.DELETE_COURSE_OPTIMISTIC,
+    course,
+  };
+}
+
+export function loadCourses() {
+  return function (dispatch) {
+    dispatch(beginApiCall());
+    console.log("load action");
+    return courseApi
+      .getCourses()
+      .then((courses) => {
+        dispatch(loadCourseSuccess(courses));
+      })
+      .catch((error) => {
+        throw error;
+      });
+  };
+}
+
+export const createCourseSuccess = (course) => {
+  return { type: types.CREATE_COURSE_SUCCESS, course };
+};
+
+export const updateCourseSuccess = (course) => {
+  return { type: types.UPDATE_COURSE_SUCCESS, course };
+};
+
+export const saveCourse = (course) => {
+  return function (dispatch, getState) {
+    dispatch(beginApiCall());
+    return courseApi
+      .saveCourse(course)
+      .then((savedCourse) => {
+        course.id
+          ? dispatch(updateCourseSuccess(savedCourse))
+          : dispatch(createCourseSuccess(savedCourse));
+      })
+      .catch((error) => {
+        throw error;
+      });
+  };
+};
+
+export function deleteCourse(course) {
+  return (dispatch) => {
+    dispatch(deleteCourseOptimistic(course));
+    return courseApi.deleteCourse(course.id);
+  };
+}
